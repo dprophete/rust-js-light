@@ -8,7 +8,14 @@ stmt = _{
 
 assignment = { "var" ~ ident ~ "=" ~ expr ~ semi }
 
-expr = _{ sum }
+expr = _{ 
+    fct_call |
+    sum
+}
+
+fct_call = ${
+    ident ~ "(" ~ expr ~ ")"
+}
 
 sum = { 
     factor ~ ((add | sub) ~ factor)*
@@ -24,8 +31,8 @@ unary = {
     primary
 }
 primary = _{
-    ident |
     literal |
+    ident |
     inparens
 }
 
