@@ -102,7 +102,8 @@ impl Runner {
             InfixOp::Sub => v1 - v2,
             InfixOp::Mul => v1 * v2,
             InfixOp::Div => v1 / v2,
-            unknown => panic!("Unexpected unfix: {:?}", unknown),
+            InfixOp::Pow => f32::powi(v1 as f32, v2 as i32) as f64,
+            InfixOp::Modulo => v1 % v2,
         }
     }
 
