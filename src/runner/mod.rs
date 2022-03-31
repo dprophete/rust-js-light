@@ -1,7 +1,7 @@
-use value::Value;
 use crate::parser::ast::{Expr, InfixOp, Literal, Prg, Stmt};
 use itertools::Itertools;
 use std::collections::HashMap;
+use value::Value;
 
 mod value;
 
@@ -55,11 +55,9 @@ impl Runner {
 
     fn eval_literal(&mut self, literal: &Literal) -> Value {
         match literal {
-            Literal::Array(elts) => Value::Array(
-                elts.into_iter()
-                    .map(|elt| self.eval_expr(elt))
-                    .collect(),
-            ),
+            Literal::Array(elts) => {
+                Value::Array(elts.into_iter().map(|elt| self.eval_expr(elt)).collect())
+            }
             Literal::Object(props) => Value::Object(
                 props
                     .into_iter()
@@ -69,18 +67,14 @@ impl Runner {
             Literal::Str(s) => Value::Str(s.clone()),
             Literal::Num(n) => Value::Num(*n),
             Literal::Bool(b) => Value::Bool(*b),
-            Literal::Null => Value::Null
+            Literal::Null => Value::Null,
         }
     }
 
     fn eval_infix(&mut self, infix: &InfixOp, lhs: Value, rhs: Value) -> Value {
         match (lhs, rhs) {
-            (Value::Num(v1), Value::Num(v2)) => {
-                Value::Num(self.eval_infix_num(infix, v1, v2))
-            }
-            (Value::Str(v1), Value::Str(v2)) => {
-                Value::Str(self.eval_infix_str(infix, v1, v2))
-            }
+            (Value::Num(v1), Value::Num(v2)) => Value::Num(self.eval_infix_num(infix, v1, v2)),
+            (Value::Str(v1), Value::Str(v2)) => Value::Str(self.eval_infix_str(infix, v1, v2)),
             unknown => panic!("Unexpected infix: {:?}", unknown),
         }
     }
