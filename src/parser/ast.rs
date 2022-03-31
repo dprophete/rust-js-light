@@ -36,6 +36,7 @@ pub enum Expr {
     Infix(InfixOp, Box<Expr>, Box<Expr>),
     Prefix(PrefixOp, Box<Expr>),
     Parens(Box<Expr>),
+    FctCall(String, Box<Expr>),
 }
 
 impl fmt::Display for Expr {
@@ -46,6 +47,7 @@ impl fmt::Display for Expr {
             Expr::Infix(infix_op, lhs, rhs) => write!(f, "{} {} {}", lhs, infix_op, rhs),
             Expr::Prefix(prefix_op, lhs) => write!(f, "{} {}", prefix_op, lhs),
             Expr::Parens(expr) => write!(f, "({})", expr),
+            Expr::FctCall(name, param) => write!(f, "{}({})", name, param),
         }
     }
 }

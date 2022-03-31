@@ -3,7 +3,7 @@ extern crate pest;
 extern crate pest_derive;
 
 #[derive(Parser)]
-#[grammar = "lang.pest"]
+#[grammar = "parser/lang.pest"]
 pub struct LangParser;
 
 use std::fs;

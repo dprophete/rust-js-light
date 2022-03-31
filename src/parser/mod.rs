@@ -8,9 +8,19 @@ use pest::iterators::Pair;
 
 pub mod ast;
 
+pub fn parse_json(str: &str) -> Result<Literal, Error<Rule>> {
+    let pairs = LangParser::parse(Rule::literal, &str);
+    let pair = pairs.unwrap().into_iter().next().unwrap();
+    match parse_expr(pair) {
+        Expr::Literal(literal) => Ok(literal),
+        unknown => panic!("Unexpected json expr: {:?}", unknown),
+    }
+}
+
 pub fn parse_prg(str: &str) -> Result<Prg, Error<Rule>> {
     let mut ast = vec![];
     let pairs = LangParser::parse(Rule::prg, &str);
+    //println!("[DDA] mod::pairs {:?}", pairs);
 
     for pair in pairs? {
         ast.push(parse_stmt(pair))
@@ -32,6 +42,12 @@ fn parse_stmt(pair: Pair<Rule>) -> Stmt {
 
 fn parse_expr(pair: Pair<Rule>) -> Expr {
     match pair.as_rule() {
+        Rule::fct_call => {
+            let mut inner_rules = pair.into_inner();
+            let name = inner_rules.next().unwrap().as_str().to_string();
+            let param = parse_expr(inner_rules.next().unwrap());
+            Expr::FctCall(name, Box::new(param))
+        }
         Rule::sum | Rule::factor | Rule::power => {
             let mut inner_rules = pair.into_inner();
             let lhs_pair = inner_rules.next().unwrap();

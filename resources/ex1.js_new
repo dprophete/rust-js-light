@@ -9,3 +9,5 @@ var greetings = "hello " + name + "!!";
 var v8 = greetings + ", welcome";
 var v9 = v1 + v2 + v3;
 var card = { "name": name, "greetings": greetings, res: v4 + v6 };
+var path = "resources/ex1.json";
+var file = load_json(path);

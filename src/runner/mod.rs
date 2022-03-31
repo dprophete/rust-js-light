@@ -1,6 +1,8 @@
+use crate::parser;
 use crate::parser::ast::{Expr, InfixOp, Literal, Prg, Stmt};
 use itertools::Itertools;
 use std::collections::HashMap;
+use std::fs;
 use value::Value;
 
 mod value;
@@ -49,7 +51,22 @@ impl Runner {
             }
             Expr::Ident(var) => self.vars.get(var).unwrap().clone(),
             Expr::Parens(expr2) => self.eval_expr(expr2),
-            _ => Value::Null,
+            Expr::Prefix(_prefix, _lhs) => Value::Str(String::from("TODO")),
+            Expr::FctCall(name, param_expr) => match name.as_str() {
+                "load_json" => {
+                    let param = self.eval_expr(param_expr);
+                    match param {
+                        Value::Str(path) => {
+                            println!("[DDA] mod::path {:?}", path);
+                            let file_content = fs::read_to_string(path).expect("cannot read file");
+                            let literal = parser::parse_json(file_content.as_str()).unwrap();
+                            self.eval_literal(&literal)
+                        }
+                        unknown => panic!("Unexpected path: {:?}", unknown),
+                    }
+                }
+                unknown => panic!("Unexpected function: {:?}", unknown),
+            },
         }
     }
 
