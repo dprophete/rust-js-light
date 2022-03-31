@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use itertools::Itertools;
-use crate::ast::{InfixOp, Literal, Expr, Stmt, Prg};
+use crate::parser::ast::{InfixOp, Literal, Expr, Stmt, Prg};
 
 pub struct Runner {
     vars: HashMap<String, Literal>
@@ -45,6 +45,7 @@ impl Runner {
                 self.eval_infix(infix, lhs, rhs)
             },
             Expr::Ident(var) => self.vars.get(var).unwrap().clone(),
+            Expr::Parens(expr2) => self.eval_expr(expr2),
             _ => Literal::Null
         }
     }

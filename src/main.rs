@@ -8,7 +8,6 @@ pub struct LangParser;
 
 use std::fs;
 
-mod ast;
 mod parser;
 mod runner;
 

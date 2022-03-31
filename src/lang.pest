@@ -26,8 +26,11 @@ unary = {
 primary = _{
     ident |
     literal |
-    "(" ~ expr ~ ")"
+    inparens
 }
+
+inparens = { "(" ~ expr ~ ")" }
+
 literal = {
     object |
     array |

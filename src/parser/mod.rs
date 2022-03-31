@@ -1,10 +1,12 @@
 use crate::LangParser;
 use crate::Rule;
 use crate::pest::Parser;
-use crate::ast::{PrefixOp, InfixOp, Literal, Expr, Stmt, Prg};
+use ast::{PrefixOp, InfixOp, Literal, Expr, Stmt, Prg};
 
 use pest::iterators::Pair;
 use pest::error::Error;
+
+pub mod ast;
 
 pub fn parse_prg(str: &str) -> Result<Prg, Error<Rule>> {
     let mut ast = vec![];
@@ -60,6 +62,7 @@ fn parse_expr(pair: Pair<Rule>) -> Expr {
         }
         Rule::ident => Expr::Ident(pair.as_str().to_string()),
         Rule::literal => Expr::Literal(parse_literal(pair.into_inner().next().unwrap())),
+        Rule::inparens => Expr::Parens(Box::new(parse_expr(pair.into_inner().next().unwrap()))),
         unknown => panic!("Unexpected expression: {:?}", unknown),
     }
 }
