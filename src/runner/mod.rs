@@ -1,3 +1,4 @@
+use value::Value;
 use crate::parser::ast::{Expr, InfixOp, Literal, Prg, Stmt};
 use itertools::Itertools;
 use std::collections::HashMap;
@@ -5,7 +6,7 @@ use std::collections::HashMap;
 mod value;
 
 pub struct Runner {
-    vars: HashMap<String, Literal>,
+    vars: HashMap<String, Value>,
 }
 
 impl Runner {
@@ -38,7 +39,7 @@ impl Runner {
         }
     }
 
-    fn eval_expr(&mut self, expr: &Expr) -> Literal {
+    fn eval_expr(&mut self, expr: &Expr) -> Value {
         match expr {
             Expr::Literal(literal) => self.eval_literal(literal),
             Expr::Infix(infix, lhs_expr, rhs_expr) => {
@@ -48,34 +49,37 @@ impl Runner {
             }
             Expr::Ident(var) => self.vars.get(var).unwrap().clone(),
             Expr::Parens(expr2) => self.eval_expr(expr2),
-            _ => Literal::Null,
+            _ => Value::Null,
         }
     }
 
-    fn eval_literal(&mut self, literal: &Literal) -> Literal {
+    fn eval_literal(&mut self, literal: &Literal) -> Value {
         match literal {
-            Literal::Array(elts) => Literal::Array(
+            Literal::Array(elts) => Value::Array(
                 elts.into_iter()
-                    .map(|elt| Expr::Literal(self.eval_expr(elt)))
+                    .map(|elt| self.eval_expr(elt))
                     .collect(),
             ),
-            Literal::Object(props) => Literal::Object(
+            Literal::Object(props) => Value::Object(
                 props
                     .into_iter()
-                    .map(|(name, val)| (name.clone(), Expr::Literal(self.eval_expr(val))))
+                    .map(|(name, val)| (name.clone(), self.eval_expr(val)))
                     .collect(),
             ),
-            _ => literal.clone(),
+            Literal::Str(s) => Value::Str(s.clone()),
+            Literal::Num(n) => Value::Num(*n),
+            Literal::Bool(b) => Value::Bool(*b),
+            Literal::Null => Value::Null
         }
     }
 
-    fn eval_infix(&mut self, infix: &InfixOp, lhs: Literal, rhs: Literal) -> Literal {
+    fn eval_infix(&mut self, infix: &InfixOp, lhs: Value, rhs: Value) -> Value {
         match (lhs, rhs) {
-            (Literal::Num(v1), Literal::Num(v2)) => {
-                Literal::Num(self.eval_infix_num(infix, v1, v2))
+            (Value::Num(v1), Value::Num(v2)) => {
+                Value::Num(self.eval_infix_num(infix, v1, v2))
             }
-            (Literal::Str(v1), Literal::Str(v2)) => {
-                Literal::Str(self.eval_infix_str(infix, v1, v2))
+            (Value::Str(v1), Value::Str(v2)) => {
+                Value::Str(self.eval_infix_str(infix, v1, v2))
             }
             unknown => panic!("Unexpected infix: {:?}", unknown),
         }
