@@ -2,7 +2,7 @@ use std::fmt;
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct Prg {
-    pub stmts: Vec<Stmt>
+    pub stmts: Vec<Stmt>,
 }
 
 impl fmt::Display for Prg {
@@ -35,7 +35,7 @@ pub enum Expr {
     Literal(Literal),
     Infix(InfixOp, Box<Expr>, Box<Expr>),
     Prefix(PrefixOp, Box<Expr>),
-    Parens(Box<Expr>)
+    Parens(Box<Expr>),
 }
 
 impl fmt::Display for Expr {
@@ -64,7 +64,10 @@ impl fmt::Display for Literal {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Literal::Object(props) => {
-                let res: Vec<String> = props.into_iter().map(|(name, value)| format!("\"{}\": {}", name, value)).collect();
+                let res: Vec<String> = props
+                    .into_iter()
+                    .map(|(name, value)| format!("\"{}\": {}", name, value))
+                    .collect();
                 write!(f, "{{{}}}", res.join(", "))
             }
             Literal::Array(elts) => {

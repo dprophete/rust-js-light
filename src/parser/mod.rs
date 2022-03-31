@@ -1,10 +1,10 @@
+use crate::pest::Parser;
 use crate::LangParser;
 use crate::Rule;
-use crate::pest::Parser;
-use ast::{PrefixOp, InfixOp, Literal, Expr, Stmt, Prg};
+use ast::{Expr, InfixOp, Literal, PrefixOp, Prg, Stmt};
 
-use pest::iterators::Pair;
 use pest::error::Error;
+use pest::iterators::Pair;
 
 pub mod ast;
 
@@ -43,7 +43,7 @@ fn parse_expr(pair: Pair<Rule>) -> Expr {
                         let rhs = parse_expr(rhs_pair);
                         lhs = Expr::Infix(infix, Box::new(lhs), Box::new(rhs))
                     }
-                    _ => break
+                    _ => break,
                 }
             }
             lhs
@@ -71,18 +71,18 @@ fn parse_literal(pair: Pair<Rule>) -> Literal {
     match pair.as_rule() {
         Rule::object => Literal::Object(
             pair.into_inner()
-            .map(|pair| {
-                let mut inner_rules = pair.into_inner();
-                let name_pair = inner_rules.next().unwrap();
-                let name = match name_pair.as_rule() {
-                    Rule::ident => name_pair.as_str().to_string(),
-                    Rule::string => name_pair.into_inner().next().unwrap().as_str().to_string(),
-                    unknown => panic!("Unexpected literal: {:?}", unknown),
-                };
-                let value = parse_expr(inner_rules.next().unwrap());
-                (name, value)
-            })
-            .collect(),
+                .map(|pair| {
+                    let mut inner_rules = pair.into_inner();
+                    let name_pair = inner_rules.next().unwrap();
+                    let name = match name_pair.as_rule() {
+                        Rule::ident => name_pair.as_str().to_string(),
+                        Rule::string => name_pair.into_inner().next().unwrap().as_str().to_string(),
+                        unknown => panic!("Unexpected literal: {:?}", unknown),
+                    };
+                    let value = parse_expr(inner_rules.next().unwrap());
+                    (name, value)
+                })
+                .collect(),
         ),
         Rule::array => Literal::Array(pair.into_inner().map(parse_expr).collect()),
         Rule::string => Literal::Str(pair.into_inner().next().unwrap().as_str().to_string()),
