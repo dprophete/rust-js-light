@@ -44,9 +44,13 @@ fn parse_expr(pair: Pair<Rule>) -> Expr {
     match pair.as_rule() {
         Rule::fct_call => {
             let mut inner_rules = pair.into_inner();
-            let name = inner_rules.next().unwrap().as_str().to_string();
-            let param = parse_expr(inner_rules.next().unwrap());
-            Expr::FctCall(name, Box::new(param))
+            // node: we skip the function_start rule and go directly to the ident inside it
+            let name = inner_rules.next().unwrap().into_inner().next().unwrap().as_str().to_string();
+            let mut params = vec![];
+            while let Some(nx_pair) = inner_rules.next() {
+                params.push(parse_expr(nx_pair))
+            }
+            Expr::FctCall(name, params)
         }
         Rule::sum | Rule::factor | Rule::power => {
             let mut inner_rules = pair.into_inner();

@@ -1,31 +1,18 @@
 main = _{ SOI ~ prg ~ EOI }
 
 prg = _{ stmt* }
-
-stmt = _{
-    assignment
-}
-
+stmt = _{ assignment }
 assignment = { "var" ~ ident ~ "=" ~ expr ~ semi }
-
 expr = _{ 
     fct_call |
     sum
 }
-
-fct_call = ${
-    ident ~ "(" ~ expr ~ ")"
-}
-
-sum = { 
-    factor ~ ((add | sub) ~ factor)*
-}
-factor = {
-    power ~ ((mul | div | modulo) ~ power)*
-}
-power = {
-    unary ~ (pow ~ unary)*
-}
+fct_call = { fct_start ~ args ~ ")" }
+fct_start = ${ ident ~ "(" }
+args = _{ expr ~ ("," ~ expr)* }
+sum = { factor ~ ((add | sub) ~ factor)* }
+factor = { power ~ ((mul | div | modulo) ~ power)* }
+power = { unary ~ (pow ~ unary)* }
 unary = {
     (sub | add) ~ primary |
     primary
@@ -35,9 +22,7 @@ primary = _{
     ident |
     inparens
 }
-
 inparens = { "(" ~ expr ~ ")" }
-
 literal = {
     object |
     array |
@@ -46,20 +31,33 @@ literal = {
     boolean |
     null
 }
-
 object = {
     "{" ~ "}" |
     "{" ~ prop ~ ("," ~ prop)* ~ "}"
 }
-
 prop = { prop_name ~ ":" ~ expr }
-
-prop_name = _{ string | ident }
-
+prop_name = _{
+    string | 
+    ident
+}
 array = {
     "[" ~ "]" |
     "[" ~ expr ~ ("," ~ expr)* ~ "]"
 }
+string = ${ "\"" ~ inner_str_with_double_quote ~ "\"" }
+inner_str_with_double_quote = @{ char_with_double_quote* }
+char_with_double_quote = {
+    !("\"" | "\\") ~ ANY
+    | "\\" ~ ("\"" | "\'" | "\\" | "/" | "b" | "f" | "n" | "r" | "t")
+    | "\\" ~ ("u" ~ ASCII_HEX_DIGIT{4})
+}
+number = @{
+    "-"?
+    ~ ("0" | ASCII_NONZERO_DIGIT ~ ASCII_DIGIT*)
+    ~ ("." ~ ASCII_DIGIT*)?
+    ~ (^"e" ~ ("+" | "-")? ~ ASCII_DIGIT+)?
+}
+ident = @{ ASCII_ALPHA ~ (ASCII_ALPHANUMERIC | "_")* }
 
 add = { "+" }
 sub = { "-" }
@@ -67,31 +65,8 @@ mul = { "*" }
 div = { "/" }
 pow = { "^" }
 modulo = { "%" }
-
 boolean = { "true" | "false" }
-
 null = { "null" }
-
-string = ${ 
-    "\"" ~ inner_str_with_double_quote ~ "\""
-}
-
-inner_str_with_double_quote = @{ char_with_double_quote* }
-char_with_double_quote = {
-    !("\"" | "\\") ~ ANY
-    | "\\" ~ ("\"" | "\'" | "\\" | "/" | "b" | "f" | "n" | "r" | "t")
-    | "\\" ~ ("u" ~ ASCII_HEX_DIGIT{4})
-}
-
-number = @{
-    "-"?
-    ~ ("0" | ASCII_NONZERO_DIGIT ~ ASCII_DIGIT*)
-    ~ ("." ~ ASCII_DIGIT*)?
-    ~ (^"e" ~ ("+" | "-")? ~ ASCII_DIGIT+)?
-}
-
-ident = @{ ASCII_ALPHA ~ (ASCII_ALPHANUMERIC | "_")* }
-
 semi = _{ ";" }
 
 WHITESPACE = _{ " " | "\t" | "\r" | "\n" }
