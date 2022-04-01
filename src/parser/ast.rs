@@ -48,10 +48,8 @@ impl fmt::Display for Expr {
             Expr::Prefix(prefix_op, lhs) => write!(f, "{} {}", prefix_op, lhs),
             Expr::Parens(expr) => write!(f, "({})", expr),
             Expr::FctCall(name, params) => {
-                let params2: Vec<String> = params
-                    .into_iter()
-                    .map(|elt| format!("{}", elt))
-                    .collect();
+                let params2: Vec<String> =
+                    params.into_iter().map(|elt| format!("{}", elt)).collect();
                 write!(f, "{}({})", name, params2.join(", "))
             }
         }

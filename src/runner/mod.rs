@@ -1,20 +1,21 @@
-use crate::parser;
 use crate::parser::ast::{Expr, InfixOp, Literal, Prg, Stmt};
 use itertools::Itertools;
 use std::collections::HashMap;
-use std::fs;
 use value::Value;
 
+mod builtins;
 mod value;
 
 pub struct Runner {
     vars: HashMap<String, Value>,
+    builtins: HashMap<String, builtins::Builtin>,
 }
 
 impl Runner {
     pub fn new() -> Self {
         Runner {
             vars: HashMap::new(),
+            builtins: builtins::new(),
         }
     }
 
@@ -53,40 +54,25 @@ impl Runner {
             Expr::Parens(expr2) => self.eval_expr(expr2),
             Expr::Prefix(_prefix, _lhs) => Value::Str(String::from("TODO")),
             Expr::FctCall(name, params_expr) => {
-                let params: Vec<Value> =
-                    params_expr.iter().map(|e| self.eval_expr(e)).collect();
-                match name.as_str() {
-                    "load_json" => {
-                        if params.len() == 1 {
-                            let path = value::as_string(params.get(0).unwrap());
-                            let file_content = fs::read_to_string(path).expect("cannot read file");
-                            let literal = parser::parse_json(file_content.as_str()).unwrap();
-                            self.eval_literal(&literal)
+                let params: Vec<Value> = params_expr.iter().map(|e| self.eval_expr(e)).collect();
+                match self.builtins.get(&name.to_string()) {
+                    Some(builtin) => {
+                        let nb_args = builtin.nb_args;
+                        let func = builtin.func;
+                        if params.len() == nb_args {
+                            func(self, &params)
                         } else {
-                            panic!("invalid number of params for ${} {:?}", name, params);
+                            panic!(
+                                "invalid number of params for {}. Expected {}, got {}",
+                                name,
+                                nb_args,
+                                params.len()
+                            );
                         }
                     }
-                    "min" => {
-                        if params.len() == 2 {
-                            let v1 = value::as_f64(params.get(0).unwrap());
-                            let v2 = value::as_f64(params.get(1).unwrap());
-                            Value::Num(v1.min(v2))
-                        } else {
-                            panic!("invalid number of params for ${} {:?}", name, params);
-                        }
-                    }
-                    "max" => {
-                        if params.len() == 2 {
-                            let v1 = value::as_f64(params.get(0).unwrap());
-                            let v2 = value::as_f64(params.get(1).unwrap());
-                            Value::Num(v1.max(v2))
-                        } else {
-                            panic!("invalid number of params for ${} {:?}", name, params);
-                        }
-                    }
-                    unknown => panic!("Unexpected function: {:?}", unknown),
+                    _ => panic!("Unexpected function: {}", name),
                 }
-            },
+            }
         }
     }
 

@@ -45,7 +45,14 @@ fn parse_expr(pair: Pair<Rule>) -> Expr {
         Rule::fct_call => {
             let mut inner_rules = pair.into_inner();
             // node: we skip the function_start rule and go directly to the ident inside it
-            let name = inner_rules.next().unwrap().into_inner().next().unwrap().as_str().to_string();
+            let name = inner_rules
+                .next()
+                .unwrap()
+                .into_inner()
+                .next()
+                .unwrap()
+                .as_str()
+                .to_string();
             let mut params = vec![];
             while let Some(nx_pair) = inner_rules.next() {
                 params.push(parse_expr(nx_pair))
