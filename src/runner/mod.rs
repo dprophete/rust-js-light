@@ -19,7 +19,7 @@ impl Runner {
         }
     }
 
-    pub fn run_prg(&mut self, prg: &Prg) -> () {
+    pub fn run_prg(&mut self, prg: &Prg) {
         for stmt in &prg.stmts {
             self.run_stmt(stmt)
         }
@@ -32,12 +32,11 @@ impl Runner {
         }
     }
 
-    fn run_stmt(&mut self, stmt: &Stmt) -> () {
+    fn run_stmt(&mut self, stmt: &Stmt) {
         match stmt {
             Stmt::Assign(name, expr) => {
                 let val = self.eval_expr(expr);
                 self.vars.insert(name.clone(), val);
-                ()
             }
         }
     }
@@ -55,7 +54,7 @@ impl Runner {
             Expr::Prefix(_prefix, _lhs) => Value::Str(String::from("TODO")),
             Expr::FctCall(name, params_expr) => {
                 let params: Vec<Value> = params_expr.iter().map(|e| self.eval_expr(e)).collect();
-                match self.builtins.get(&name.to_string()) {
+                match self.builtins.get(name) {
                     Some(builtin) => {
                         let nb_args = builtin.nb_args;
                         let func = builtin.func;
@@ -79,11 +78,11 @@ impl Runner {
     fn eval_literal(&mut self, literal: &Literal) -> Value {
         match literal {
             Literal::Array(elts) => {
-                Value::Array(elts.into_iter().map(|elt| self.eval_expr(elt)).collect())
+                Value::Array(elts.iter().map(|elt| self.eval_expr(elt)).collect())
             }
             Literal::Object(props) => Value::Object(
                 props
-                    .into_iter()
+                    .iter()
                     .map(|(name, val)| (name.clone(), self.eval_expr(val)))
                     .collect(),
             ),
