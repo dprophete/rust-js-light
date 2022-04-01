@@ -15,13 +15,13 @@ impl fmt::Display for Value {
         match self {
             Value::Object(props) => {
                 let res: Vec<String> = props
-                    .into_iter()
+                    .iter()
                     .map(|(name, value)| format!("\"{}\": {}", name, value))
                     .collect();
                 write!(f, "{{{}}}", res.join(", "))
             }
             Value::Array(elts) => {
-                let res: Vec<String> = elts.into_iter().map(|elt| format!("{}", elt)).collect();
+                let res: Vec<String> = elts.iter().map(|elt| format!("{}", elt)).collect();
                 write!(f, "[{}]", res.join(", "))
             }
             Value::Str(s) => write!(f, "\"{}\"", s),

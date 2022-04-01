@@ -8,7 +8,7 @@ pub struct Prg {
 impl fmt::Display for Prg {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         for stmt in &self.stmts {
-            write!(f, "{}\n", stmt)?;
+            writeln!(f, "{}", stmt)?;
         }
         Ok(())
     }
@@ -48,8 +48,7 @@ impl fmt::Display for Expr {
             Expr::Prefix(prefix_op, lhs) => write!(f, "{} {}", prefix_op, lhs),
             Expr::Parens(expr) => write!(f, "({})", expr),
             Expr::FctCall(name, params) => {
-                let params2: Vec<String> =
-                    params.into_iter().map(|elt| format!("{}", elt)).collect();
+                let params2: Vec<String> = params.iter().map(|elt| format!("{}", elt)).collect();
                 write!(f, "{}({})", name, params2.join(", "))
             }
         }
@@ -71,13 +70,13 @@ impl fmt::Display for Literal {
         match self {
             Literal::Object(props) => {
                 let res: Vec<String> = props
-                    .into_iter()
+                    .iter()
                     .map(|(name, value)| format!("\"{}\": {}", name, value))
                     .collect();
                 write!(f, "{{{}}}", res.join(", "))
             }
             Literal::Array(elts) => {
-                let res: Vec<String> = elts.into_iter().map(|elt| format!("{}", elt)).collect();
+                let res: Vec<String> = elts.iter().map(|elt| format!("{}", elt)).collect();
                 write!(f, "[{}]", res.join(", "))
             }
             Literal::Str(s) => write!(f, "\"{}\"", s),

@@ -9,7 +9,7 @@ use pest::iterators::Pair;
 pub mod ast;
 
 pub fn parse_json(str: &str) -> Result<Literal, Error<Rule>> {
-    let pairs = LangParser::parse(Rule::literal, &str);
+    let pairs = LangParser::parse(Rule::literal, str);
     let pair = pairs.unwrap().into_iter().next().unwrap();
     match parse_expr(pair) {
         Expr::Literal(literal) => Ok(literal),
@@ -19,7 +19,7 @@ pub fn parse_json(str: &str) -> Result<Literal, Error<Rule>> {
 
 pub fn parse_prg(str: &str) -> Result<Prg, Error<Rule>> {
     let mut ast = vec![];
-    let pairs = LangParser::parse(Rule::prg, &str);
+    let pairs = LangParser::parse(Rule::prg, str);
     //println!("[DDA] mod::pairs {:?}", pairs);
 
     for pair in pairs? {
@@ -54,7 +54,7 @@ fn parse_expr(pair: Pair<Rule>) -> Expr {
                 .as_str()
                 .to_string();
             let mut params = vec![];
-            while let Some(nx_pair) = inner_rules.next() {
+            for nx_pair in inner_rules {
                 params.push(parse_expr(nx_pair))
             }
             Expr::FctCall(name, params)
@@ -63,15 +63,10 @@ fn parse_expr(pair: Pair<Rule>) -> Expr {
             let mut inner_rules = pair.into_inner();
             let lhs_pair = inner_rules.next().unwrap();
             let mut lhs = parse_expr(lhs_pair);
-            loop {
-                match (inner_rules.next(), inner_rules.next()) {
-                    (Some(op_pair), Some(rhs_pair)) => {
-                        let infix = parse_infix_op(op_pair);
-                        let rhs = parse_expr(rhs_pair);
-                        lhs = Expr::Infix(infix, Box::new(lhs), Box::new(rhs))
-                    }
-                    _ => break,
-                }
+            while let (Some(op_pair), Some(rhs_pair)) = (inner_rules.next(), inner_rules.next()) {
+                let infix = parse_infix_op(op_pair);
+                let rhs = parse_expr(rhs_pair);
+                lhs = Expr::Infix(infix, Box::new(lhs), Box::new(rhs))
             }
             lhs
         }
