@@ -29,19 +29,16 @@ fn main() {
     if let Some(expr) = &args.expr {
         run_prg(expr);
         process::exit(0)
-    } else
+    }
+
     // file
     if let Some(file) = &args.file {
-        match fs::read_to_string(file) {
-            Ok(content) => {
-                run_prg(&content);
-                process::exit(0)
-            }
-            Err(e) => {
-                eprintln!("Error reading file {}: {}", file, e);
-                process::exit(1)
-            }
-        }
+        let content = fs::read_to_string(file).unwrap_or_else(|e| {
+            eprintln!("Error reading file {}: {}", file, e);
+            process::exit(1)
+        });
+        run_prg(&content);
+        process::exit(0)
     }
 
     MainArgs::command().print_help().unwrap();
