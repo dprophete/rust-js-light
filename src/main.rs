@@ -19,5 +19,5 @@ fn main() {
     println!("executing prg");
     let mut runner = runner::Runner::new();
     runner.run_prg(&prg);
-    runner.print_vars()
+    runner.print_vars();
 }
