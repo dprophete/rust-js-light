@@ -24,8 +24,10 @@ mod runner;
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
-    #[error("parse error {0:?}")]
+    #[error("parse error {0}")]
     ParseError(#[from] parser::Error),
+    #[error("runtime error {0}")]
+    RuntimeError(#[from] runner::Error),
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
@@ -65,7 +67,7 @@ fn run_prg(content: &str) -> Result<()> {
 
     println!("executing prg");
     let mut runner = runner::Runner::new();
-    runner.run_prg(&prg);
+    runner.run_prg(&prg)?;
     runner.print_vars();
     Ok(())
 }
