@@ -1,41 +1,42 @@
 use crate::pest::Parser;
 use crate::LangParser;
 use crate::Rule;
-use ast::{Expr, InfixOp, Literal, PrefixOp, Prg, Stmt};
-
-use pest::error::Error as PestError;
+use anyhow::{bail, Result};
 use pest::iterators::Pair;
+
+use ast::{Expr, InfixOp, Literal, PrefixOp, Prg, Stmt};
 
 pub mod ast;
 
-#[derive(Debug, thiserror::Error)]
-pub enum Error {
-    #[error("invalid json {0}")]
-    InvalidJson(Expr),
-    #[error(transparent)]
-    Pest(#[from] PestError<Rule>),
-    #[error("invalid infix {0:?}")]
-    Infix(Rule),
-    #[error("invalid prefix {0:?}")]
-    Prefix(Rule),
-    #[error("invalid litteral {0:?}")]
-    Litteral(Rule),
-    #[error("invalid expression {0:?}")]
-    Expr(Rule),
-    #[error("unexpected unary {0}")]
-    Unary(String),
-    #[error("invalid statement {0:?}")]
-    Stmt(Rule),
-}
-
-pub type Result<T> = std::result::Result<T, Error>;
+// use pest::error::Error as PestError;
+// #[derive(Debug, thiserror::Error)]
+// pub enum Error {
+//     #[error("invalid json {0}")]
+//     InvalidJson(Expr),
+//     #[error(transparent)]
+//     Pest(#[from] PestError<Rule>),
+//     #[error("invalid infix {0:?}")]
+//     Infix(Rule),
+//     #[error("invalid prefix {0:?}")]
+//     Prefix(Rule),
+//     #[error("invalid litteral {0:?}")]
+//     Litteral(Rule),
+//     #[error("invalid expression {0:?}")]
+//     Expr(Rule),
+//     #[error("unexpected unary {0}")]
+//     Unary(String),
+//     #[error("invalid statement {0:?}")]
+//     Stmt(Rule),
+// }
+//
+// pub type Result<T> = std::result::Result<T, Error>;
 
 pub fn parse_json(str: &str) -> Result<Literal> {
     let pairs = LangParser::parse(Rule::literal, str);
     let pair = pairs.unwrap().into_iter().next().unwrap();
     match parse_expr(pair)? {
         Expr::Literal(literal) => Ok(literal),
-        other => Err(Error::InvalidJson(other)),
+        unknown => bail!("Unexpected json expr: {}", unknown),
     }
 }
 
@@ -58,7 +59,7 @@ fn parse_stmt(pair: Pair<Rule>) -> Result<Stmt> {
             let val = parse_expr(inner_rules.next().unwrap())?;
             Ok(Stmt::Assign(name, Box::new(val)))
         }
-        unknown => Err(Error::Stmt(unknown)),
+        unknown => bail!("Unexpected statement: {:?}", unknown),
     }
 }
 
@@ -101,7 +102,7 @@ fn parse_expr(pair: Pair<Rule>) -> Result<Expr> {
                     Ok(Expr::Prefix(prefix, Box::new(rhs)))
                 }
                 (Some(lhs_pair), None) => parse_expr(lhs_pair),
-                unkown => Err(Error::Unary(format!("{:?}", unkown))),
+                unknown => bail!("Unexpected unary: {:?}", unknown),
             }
         }
         Rule::ident => Ok(Expr::Ident(pair.as_str().to_string())),
@@ -111,7 +112,7 @@ fn parse_expr(pair: Pair<Rule>) -> Result<Expr> {
         Rule::inparens => Ok(Expr::Parens(Box::new(parse_expr(
             pair.into_inner().next().unwrap(),
         )?))),
-        unknown => Err(Error::Expr(unknown)),
+        unknown => bail!("Unexpected expression: {:?}", unknown),
     }
 }
 
@@ -123,9 +124,9 @@ fn parse_literal(pair: Pair<Rule>) -> Result<Literal> {
                 let mut inner_rules = pair.into_inner();
                 let name_pair = inner_rules.next().unwrap();
                 let name = (match name_pair.as_rule() {
-                    Rule::ident => Ok(name_pair.as_str().to_string()),
+                    Rule::ident => Ok::<String, anyhow::Error>(name_pair.as_str().to_string()),
                     Rule::string => Ok(name_pair.into_inner().next().unwrap().as_str().to_string()),
-                    unknown => Err(Error::Litteral(unknown)),
+                    unknown => bail!("Unexpected litteral: {:?}", unknown),
                 })?;
                 let value = parse_expr(inner_rules.next().unwrap())?;
                 fields.push((name, value))
@@ -145,7 +146,7 @@ fn parse_literal(pair: Pair<Rule>) -> Result<Literal> {
         Rule::number => Ok(Literal::Num(pair.as_str().parse().unwrap())),
         Rule::boolean => Ok(Literal::Bool(pair.as_str().parse().unwrap())),
         Rule::null => Ok(Literal::Null),
-        unknown => Err(Error::Litteral(unknown)),
+        unknown => bail!("Unexpected litteral: {:?}", unknown),
     }
 }
 
@@ -157,7 +158,7 @@ fn parse_infix_op(pair: Pair<Rule>) -> Result<InfixOp> {
         Rule::div => Ok(InfixOp::Div),
         Rule::pow => Ok(InfixOp::Pow),
         Rule::modulo => Ok(InfixOp::Modulo),
-        unknown => Err(Error::Infix(unknown)),
+        unknown => bail!("Unexpected infix: {:?}", unknown),
     }
 }
 
@@ -165,6 +166,6 @@ fn parse_prefix_op(pair: Pair<Rule>) -> Result<PrefixOp> {
     match pair.as_rule() {
         Rule::add => Ok(PrefixOp::Plus),
         Rule::sub => Ok(PrefixOp::Minus),
-        unknown => Err(Error::Prefix(unknown)),
+        unknown => bail!("Unexpected prefix: {:?}", unknown),
     }
 }

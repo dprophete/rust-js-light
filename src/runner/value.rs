@@ -1,5 +1,4 @@
-use crate::runner::Error;
-use crate::runner::Result;
+use anyhow::{bail, Result};
 use std::fmt;
 
 #[derive(PartialEq, Clone, Debug)]
@@ -62,7 +61,7 @@ impl fmt::Display for Type {
 pub fn as_string(val: &Value) -> Result<&String> {
     match val {
         Value::Str(str) => Ok(str),
-        _ => Err(Error::InvalidStr(val.clone())),
+        _ => bail!("invalid string type {}", val),
     }
 }
 
@@ -70,7 +69,7 @@ pub fn as_string(val: &Value) -> Result<&String> {
 pub fn as_f64(val: &Value) -> Result<f64> {
     match val {
         Value::Num(num) => Ok(*num),
-        _ => Err(Error::InvalidNum(val.clone())),
+        _ => bail!("invalid number type {}", val),
     }
 }
 
@@ -78,7 +77,7 @@ pub fn as_f64(val: &Value) -> Result<f64> {
 pub fn as_bool(val: &Value) -> Result<bool> {
     match val {
         Value::Bool(bool) => Ok(*bool),
-        _ => Err(Error::InvalidBool(val.clone())),
+        _ => bail!("invalid bool type {}", val),
     }
 }
 
@@ -86,7 +85,7 @@ pub fn as_bool(val: &Value) -> Result<bool> {
 pub fn as_vec(val: &Value) -> Result<&Vec<Value>> {
     match val {
         Value::Array(arr) => Ok(arr),
-        _ => Err(Error::InvalidArray(val.clone())),
+        _ => bail!("invalid array type {}", val),
     }
 }
 
@@ -94,6 +93,6 @@ pub fn as_vec(val: &Value) -> Result<&Vec<Value>> {
 pub fn as_hash(val: &Value) -> Result<&Vec<(String, Value)>> {
     match val {
         Value::Object(obj) => Ok(obj),
-        _ => Err(Error::InvalidHash(val.clone())),
+        _ => bail!("invalid object type {}", val),
     }
 }

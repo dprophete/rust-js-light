@@ -1,41 +1,41 @@
-use crate::parser::{
-    self,
-    ast::{Expr, InfixOp, Literal, Prg, Stmt},
-};
 use itertools::Itertools;
 use std::collections::HashMap;
+
+use crate::parser::ast::{Expr, InfixOp, Literal, Prg, Stmt};
 use value::Value;
+
+use anyhow::{bail, Result};
 
 mod builtins;
 mod value;
 
-#[derive(Debug, thiserror::Error)]
-pub enum Error {
-    #[error("invalid infix {0} {1}")]
-    Infix(Value, Value),
-    #[error("invalid string infix {0}")]
-    InfixStr(InfixOp),
-    #[error("invalid number of params for {0}. Expected {1}, got {2}")]
-    FunctionParams(String, usize, usize),
-    #[error("invalid string infix {0}")]
-    Function(String),
-    #[error("parse error {0:?}")]
-    ParseError(#[from] parser::Error),
-    #[error("invalid string type {0}")]
-    InvalidStr(Value),
-    #[error("invalid float type {0}")]
-    InvalidNum(Value),
-    #[error("invalid bool type {0}")]
-    InvalidBool(Value),
-    #[error("invalid array type {0}")]
-    InvalidArray(Value),
-    #[error("invalid hash type {0}")]
-    InvalidHash(Value),
-    #[error("invalid file path {0}")]
-    InvalidFile(String),
-}
-
-pub type Result<T> = std::result::Result<T, Error>;
+// #[derive(Debug, thiserror::Error)]
+// pub enum Error {
+//     #[error("invalid infix {0} {1}")]
+//     Infix(Value, Value),
+//     #[error("invalid string infix {0}")]
+//     InfixStr(InfixOp),
+//     #[error("invalid number of params for {0}. Expected {1}, got {2}")]
+//     FunctionParams(String, usize, usize),
+//     #[error("invalid string infix {0}")]
+//     Function(String),
+//     #[error("parse error {0:?}")]
+//     ParseError(#[from] parser::Error),
+//     #[error("invalid string type {0}")]
+//     InvalidStr(Value),
+//     #[error("invalid float type {0}")]
+//     InvalidNum(Value),
+//     #[error("invalid bool type {0}")]
+//     InvalidBool(Value),
+//     #[error("invalid array type {0}")]
+//     InvalidArray(Value),
+//     #[error("invalid hash type {0}")]
+//     InvalidHash(Value),
+//     #[error("invalid file path {0}")]
+//     InvalidFile(String),
+// }
+//
+// pub type Result<T> = std::result::Result<T, Error>;
 
 pub struct Runner {
     vars: HashMap<String, Value>,
@@ -97,14 +97,15 @@ impl Runner {
                         if params.len() == nb_args {
                             func(self, &params)
                         } else {
-                            Err(Error::FunctionParams(
-                                name.to_string(),
+                            bail!(
+                                "invalid number of params for {}. Expected {}, got {}",
+                                name,
                                 nb_args,
-                                params.len(),
-                            ))
+                                params.len()
+                            );
                         }
                     }
-                    _ => Err(Error::Function(name.to_string())),
+                    _ => bail!("Unexpected function: {}", name),
                 }
             }
         }
@@ -137,7 +138,7 @@ impl Runner {
         match (lhs, rhs) {
             (Value::Num(v1), Value::Num(v2)) => Ok(Value::Num(self.eval_infix_num(infix, v1, v2))),
             (Value::Str(v1), Value::Str(v2)) => Ok(Value::Str(self.eval_infix_str(infix, v1, v2)?)),
-            (lhs, rhs) => Err(Error::Infix(lhs, rhs)),
+            (lhs, rhs) => bail!("Unexpected infix: {} {}", lhs, rhs),
         }
     }
 
@@ -155,7 +156,7 @@ impl Runner {
     fn eval_infix_str(&mut self, infix: &InfixOp, v1: String, v2: String) -> Result<String> {
         match infix {
             InfixOp::Add => Ok(format!("{}{}", v1, v2)),
-            unknown => Err(Error::InfixStr(unknown.clone())),
+            unknown => bail!("Unexpected string infix: {}", unknown),
         }
     }
 }

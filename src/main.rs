@@ -3,6 +3,7 @@ use clap::{CommandFactory, Parser as _};
 extern crate pest;
 #[macro_use]
 extern crate pest_derive;
+use anyhow::Result;
 
 #[derive(Parser)]
 #[grammar = "parser/lang.pest"]
@@ -22,15 +23,15 @@ use std::{fs, process};
 mod parser;
 mod runner;
 
-#[derive(Debug, thiserror::Error)]
-pub enum Error {
-    #[error("parse error {0}")]
-    ParseError(#[from] parser::Error),
-    #[error("runtime error {0}")]
-    RuntimeError(#[from] runner::Error),
-}
-
-pub type Result<T> = std::result::Result<T, Error>;
+// #[derive(Debug, thiserror::Error)]
+// pub enum Error {
+//     #[error("parse error {0}")]
+//     ParseError(#[from] parser::Error),
+//     #[error("runtime error {0}")]
+//     RuntimeError(#[from] runner::Error),
+// }
+//
+// pub type Result<T> = std::result::Result<T, Error>;
 
 fn main() {
     let args = MainArgs::parse();

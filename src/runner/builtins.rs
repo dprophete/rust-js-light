@@ -1,11 +1,9 @@
-use crate::parser;
-use crate::runner::value;
-use crate::runner::Runner;
-use crate::runner::Value;
+use anyhow::Result;
 use std::collections::HashMap;
 use std::fs;
 
-use crate::runner::Result;
+use crate::parser;
+use crate::runner::{value, Runner, Value};
 
 pub type BuiltinFuncSign = fn(&mut Runner, &[Value]) -> Result<Value>;
 
@@ -42,8 +40,7 @@ pub fn new() -> HashMap<String, Builtin> {
 
 fn builtin_load_json(runner: &mut Runner, params: &[Value]) -> Result<Value> {
     let path = value::as_string(params.get(0).unwrap())?;
-    let file_content = fs::read_to_string(path)
-        .map_err(|_| crate::runner::Error::InvalidFile(path.to_string()))?;
+    let file_content = fs::read_to_string(path)?;
     let literal = parser::parse_json(file_content.as_str())?;
     runner.eval_literal(&literal)
 }
