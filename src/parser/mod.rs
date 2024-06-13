@@ -160,6 +160,7 @@ fn parse_infix_op(pair: Pair<Rule>) -> Result<InfixOp> {
         unknown => Err(Error::Infix(unknown)),
     }
 }
+
 fn parse_prefix_op(pair: Pair<Rule>) -> Result<PrefixOp> {
     match pair.as_rule() {
         Rule::add => Ok(PrefixOp::Plus),
