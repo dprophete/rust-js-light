@@ -1,10 +1,27 @@
 what?
 ===
-A simple json/javascript expression parser.
+A simple json/javascript expression parser + evaluator.
 
 why?
 ===
 Playing with lexers/parsers in rust.
+
+The syntax is quite simple:
+```
+- var x = 10
+- var y = (2 + 3) * 6 + x
+- var obj = { "name": name, "greetings": greetings, res: x + y }
+```
+
+For now, the buildin functions are quite restricted, but it's a start:
+```
+- max(num1, num2)
+- min(num1, num2)
+- load_json(path)
+```
+
+Check the file [resources/ex1.js_new](https://github.com/dprophete/rust-js-light/blob/main/resources/ex1.js_new) for a full example.
+
 
 run
 ===
